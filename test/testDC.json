@@ -1,0 +1,121 @@
+{
+    "kind": "Template",
+    "apiVersion": "v1",
+    "metadata": {
+        "name": "sample-app",
+        "annotations": {
+            "description": "sample-app",
+            "iconClass": "java",
+            "tags": "sample-app"
+        }
+    },
+    "objects": [
+        {
+    	    "kind": "Secret",
+    	    "apiVersion": "v1",
+    	    "metadata": {
+        	"name": "test-secret",
+		"labels": {
+                    "application": "${APPLICATION_NAME}"
+                }
+    	    },
+    	    "data": {
+    	    },
+    	    "stringData": {
+        	"startingpoint": "startingPoint"
+    	    },
+    	    "type": "Opaque"
+	},
+        {
+            "kind": "DeploymentConfig",
+            "apiVersion": "v1",
+            "metadata": {
+                "name": "${APPLICATION_NAME}",
+                "creationTimestamp": null,
+                "labels": {
+                    "application": "${APPLICATION_NAME}"
+                }
+            },
+            "spec": {
+                "strategy": {
+                    "type": "Recreate",
+                    "resources": {}
+                },
+                "replicas": 1,
+                "selector": {
+                    "name": "${APPLICATION_NAME}"
+                },
+                "template": {
+                    "metadata": {
+                        "creationTimestamp": null,
+                        "labels": {
+                            "name": "${APPLICATION_NAME}"
+                        },
+                        "annotations": {
+			    "AssetID" : "BA0176-MS01",
+                            "LineOfBusiness": "Multifamily",
+                            "Version": "1.0.0",
+                            "ApplicationName": "SAS-Securitization Deal Service - BA0176",
+                            "Platform": "Web Logic 12.2.1",
+                            "Environment": "Dev",
+                            "OpenShiftClusterName": "ROTN Cluster"
+			}
+                    },
+                    "spec": {
+                        "containers": [
+                            {
+                                "name": "${APPLICATION_NAME}",
+                                "image": "registry.access.redhat.com/rhel7",
+                                "command": ["sleep", "infinity"],
+                                "resources": {
+				    "limits":{
+                                         "cpu": "500m",
+                                         "memory":"400Mi"
+                                    }
+                                 },
+                                "terminationMessagePath": "/dev/termination-log",
+                                "imagePullPolicy": "Always",
+                                "capabilities": {},
+                                "securityContext": {
+                                    "capabilities": {},
+                                    "privileged": false
+                                },
+				"volumeMounts": [
+				    {
+					"mountPath": "/etc/secret-volume",
+					"name": "secret-volume"
+				    }
+				]
+                            }
+                        ],
+			"volumes": [
+			    {
+				"name": "secret-volume",
+				"secret": {
+					"secretName": "test-secret"
+				}
+			    }
+			],
+                        "restartPolicy": "Always",
+                        "dnsPolicy": "ClusterFirst"
+                    }
+                }
+            }
+		}
+    ],
+    "parameters": [
+        {
+            "name": "APPLICATION_NAME",
+            "description": "Application Name",
+            "value": "sample-app"
+        },
+        {
+           "description": "Custom hostname.  Leave blank for default hostname, e.g.: <application-name>.<project>.<default-domain-suffix>",
+           "name": "APPLICATION_HOSTNAME",
+           "displayName": "Application hostname"
+        }
+    ],
+    "labels": {
+        "template": "sample-app"
+    }
+}
