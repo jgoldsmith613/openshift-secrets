@@ -1,4 +1,4 @@
-import requests, json, base64, urlparse, getopt, sys, os
+import requests, json, base64, urlparse, sys, os, argparse
 
 
 def create_token():
@@ -85,15 +85,17 @@ def deploy_dc(project, dc):
                 print response.text
                 sys.exit(1)
 
-    
 
-#Assumes you are using the CDK if you do not specify a master url, username and password
-master_url = "https://192.168.122.237:8443/"
-login_creds = "test/creds"
-file_path = "test/test_test-secret"
-project_prefix = None
-secret_name = None
+def parse_args():
+        parser = argparse.ArgumentParser()
+        parser.add_argument('-m', '--master-url', dest='master_url', required=True)
+        parser.add_argument('-l', '--login-creds', dest='login_creds', required=True)
+        parser.add_argument('-s', '--secret-file', dest='file_path', required=True)
+        args = parser.parse_args()
+        return args.master_url, args.login_creds, args.file_path
 
+
+master_url, login_creds, file_path = parse_args()
 
 project_prefix, secret_name = parse_file()
 
