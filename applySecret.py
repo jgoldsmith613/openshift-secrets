@@ -52,22 +52,37 @@ def search_deployment_configs(project):
         selected_dcs = []
         for dc in dcs["items"]:
             for volume in dc["spec"]["template"]["spec"]["volumes"]:
-                if volume["secret"] != None:
+                if volume.get("secret") != None:
                     if volume["secret"]["secretName"] == secret_name:
                         selected_dcs.append(dc["metadata"]["name"])
         return selected_dcs
         
+def check_secret(project):
+        url = master_url + "api/v1/namespaces/{}/secrets/{}".format(project, secret_name)
+        headers = { 'Authorization': 'Bearer {}'.format(token), 'Content-Type':'application/json' }
+        response = session.get(url, headers=headers)
+        if response.status_code == 200:
+            return True
+        if response.status_code == 404:
+            return False
+        else:
+            print "failed to check if secret exists"
+            sys.exit(1)
 
 
 def apply_secret(project):
 	secret_value = base64.b64encode(file(file_path).read())
-	payload = { 'data' : {'secret': secret_value}, 'metadata' : {'name': secret_name } }
+	payload = { 'data' : {secret_name : secret_value}, 'metadata' : {'name': secret_name } }
 	json_payload =  json.dumps(payload);
-	url = master_url + "api/v1/namespaces/{}/secrets/{}".format(project, secret_name)
 	headers = { 'Authorization': 'Bearer {}'.format(token), 'Content-Type':'application/json' }
-	response = session.put(url, data=json_payload, headers=headers)
-	if response.status_code != 200:
-		print "secret failed to be updated"
+        if check_secret(project):
+            url = master_url + "api/v1/namespaces/{}/secrets/{}".format(project, secret_name)
+	    response = session.put(url, data=json_payload, headers=headers)
+        else:
+            url = master_url + "api/v1/namespaces/{}/secrets".format(project)
+            response = session.post(url, data=json_payload, headers=headers)
+        if not (response.status_code == 200 or response.status_code == 201):
+		print "secret failed to be created/updated"
                 print response.status_code
                 print response.text
 		sys.exit(1)
@@ -78,7 +93,6 @@ def deploy_dc(project, dc):
         url = master_url + "oapi/v1/namespaces/{}/deploymentconfigs/{}/instantiate".format(project, dc)
         headers = { 'Authorization': 'Bearer {}'.format(token), 'Content-Type':'application/json' }
         response = session.post(url, data=json_payload, headers=headers)
-        print response.status_code
         if response.status_code != 201:
                 print "deployment request failed to be created"
                 print response.status_code
