@@ -5,4 +5,10 @@ def create_secret(name, entries):
     secret['data'] = {}
     for key in entries:
         secret['data'][key] = base64.b64encode(entries[key])
-    return json.dumps(secret)
+    return secret
+
+def transform(input_format):
+    secret = {}
+    for entry in input_format:
+        secret[entry['key']] = entry['value']
+    return secret

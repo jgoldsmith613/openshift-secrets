@@ -1,0 +1,4 @@
+archive/*
+cfg/*
+trg/*
+*.pyc
