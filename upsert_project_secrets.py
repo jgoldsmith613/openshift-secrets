@@ -1,13 +1,4 @@
-import urlparse, argparse, createSecret, ocpRequests, yaml, sys, os, shutil
-
-
-def parse_args():
-        parser = argparse.ArgumentParser()
-        parser.add_argument('-m', '--master-url', dest='master_url', required=True)
-        parser.add_argument('-l', '--login-creds', dest='login_creds', required=True)
-        parser.add_argument('-f', '--file', dest='file', required=True)        
-        args = parser.parse_args()
-        return args.master_url, args.login_creds, args.file
+import urlparse, argparse, secretUtils, ocpRequests, yaml, sys, os, shutil
 
 def parse_login_file():
     with open(login_creds, 'r') as f:
@@ -30,8 +21,8 @@ def get_alias_from_cyberark(alias):
 def make_secret(secret):
     for entry in secret['data']:
         entry['value'] = get_alias_from_cyberark(entry['alias'])
-    transformed = createSecret.transform(secret['data'])
-    ocp_secret = createSecret.create_secret(secret['name'], transformed)
+    transformed = secretUtils.transform(secret['data'])
+    ocp_secret = drcretUtils.create_secret(secret['name'], transformed)
     ocpRequestor.apply_secret(ocp_secret)
 
 def load_props(path):
