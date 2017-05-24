@@ -22,7 +22,7 @@ def make_secret(secret):
     for entry in secret['data']:
         entry['value'] = get_alias_from_cyberark(entry['alias'])
     transformed = secretUtils.transform(secret['data'])
-    ocp_secret = drcretUtils.create_secret(secret['name'], transformed)
+    ocp_secret = secretUtils.create_secret(secret['name'], transformed)
     ocpRequestor.apply_secret(ocp_secret)
 
 def load_props(path):
@@ -33,10 +33,24 @@ def load_props(path):
             props[key] = value
     return props
 
+def load_archive(secret_file):
+    archive_path = os.path.join(archive_dir, os.path.basename(secret_file))
+    if os.path.isfile(archive_path):
+        return load_yaml_file(archive_path)
+    return {}
+
 def archive_file(secret_file):
-    shutil.move(secret_file, os.path.join(archive_dir, os.path.basename(secret_file) ))
+    archive_path = os.path.join(archive_dir, os.path.basename(secret_file))
+    exists = os.path.isfile(archive_path)
+    shutil.move(secret_file, archive_path )
 
-
+def get_archive_secret(secret, archive):
+    name = secret['name']
+    if archive != {}:
+        for archive_secret in archive['secrets']:
+            if archive_secret['name'] == name:
+                return archive_secret
+    return {}
 
 
 
@@ -52,12 +66,15 @@ for trigger_file in os.listdir(trigger_path):
     if trigger_file.endswith(".yaml"):
         secret_file = os.path.join(trigger_path, trigger_file)
         parsed_file = load_yaml_file(secret_file)
-        archive_file(secret_file)
+        archived_file = load_archive(secret_file)
         project = parsed_file['project']
         ocpRequestor = ocpRequests.OCPRequests(master_url, username, password, project)
         
         for secret in parsed_file['secrets']:
-            make_secret(secret)
-
+            if get_archive_secret(secret, archived_file) != secret:
+                print secret
+                make_secret(secret)
+        
+        archive_file(secret_file)
 
 
