@@ -45,4 +45,29 @@ class OCPRequests:
     		print "secret failed to be created/updated"
                 print response.status_code
                 print response.text
-    		sys.exit(1)    
+    		sys.exit(1)
+
+    def get_deploymentconfigs(self):
+        session = requests.Session()
+        headers = { 'Authorization': 'Bearer {}'.format(self.token), 'Content-Type':'application/json' }
+        url = self.master_url + "oapi/v1/namespaces/{}/deploymentconfigs".format(self.project)
+        response = session.get(url, headers=headers, verify=False)
+        if (response.status_code != 200):
+                print "project does not exist: {}".format( project)
+                sys.exit(1)
+        return json.loads(response.text)
+
+    def deploy_dc(self, dc):
+        session = requests.Session()
+        payload = { 'name' : dc, 'latest' : True, 'force': True }
+        json_payload =  json.dumps(payload);
+        url = self.master_url + "oapi/v1/namespaces/{}/deploymentconfigs/{}/instantiate".format(self.project, dc)
+        headers = { 'Authorization': 'Bearer {}'.format(self.token), 'Content-Type':'application/json'}
+        response = session.post(url, data=json_payload, headers=headers, verify=False)
+        if response.status_code != 201:
+                print "deployment request failed to be created"
+                print response.status_code
+                print response.text
+                sys.exit(1)
+
+

@@ -2,3 +2,4 @@ archive/*
 cfg/*
 trg/*
 *.pyc
+*.zip

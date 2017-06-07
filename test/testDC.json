@@ -34,16 +34,7 @@
                         "creationTimestamp": null,
                         "labels": {
                             "name": "${APPLICATION_NAME}"
-                        },
-                        "annotations": {
-			    "AssetID" : "BA0176-MS01",
-                            "LineOfBusiness": "Multifamily",
-                            "Version": "1.0.0",
-                            "ApplicationName": "SAS-Securitization Deal Service - BA0176",
-                            "Platform": "Web Logic 12.2.1",
-                            "Environment": "Dev",
-                            "OpenShiftClusterName": "ROTN Cluster"
-			}
+                        }
                     },
                     "spec": {
                         "containers": [
@@ -51,12 +42,6 @@
                                 "name": "${APPLICATION_NAME}",
                                 "image": "registry.access.redhat.com/rhel7",
                                 "command": ["sleep", "infinity"],
-                                "resources": {
-				    "limits":{
-                                         "cpu": "500m",
-                                         "memory":"400Mi"
-                                    }
-                                 },
                                 "terminationMessagePath": "/dev/termination-log",
                                 "imagePullPolicy": "Always",
                                 "capabilities": {},

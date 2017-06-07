@@ -52,6 +52,22 @@ def get_archive_secret(secret, archive):
                 return archive_secret
     return {}
 
+def search_deployment_configs(project, secret):
+    dcs = ocpRequestor.get_deploymentconfigs()
+    selected_dcs = set()
+    for dc in dcs["items"]:
+        if dc["spec"]["template"]["spec"].get("volumes") != None:
+            for volume in dc["spec"]["template"]["spec"]["volumes"]:
+                if volume.get("secret") != None:
+                    if volume["secret"]["secretName"] == secret['name']:
+                        selected_dcs.add(dc["metadata"]["name"])
+    return selected_dcs
+
+def do_deploys(dcs):
+    for dc in dcs:
+        ocpRequestor.deploy_dc(dc)
+
+
 
 
 props = load_props('cfg/secrets.cfg')
@@ -69,12 +85,18 @@ for trigger_file in os.listdir(trigger_path):
         archived_file = load_archive(secret_file)
         project = parsed_file['project']
         ocpRequestor = ocpRequests.OCPRequests(master_url, username, password, project)
+        dcs_to_deploy = set()
         
         for secret in parsed_file['secrets']:
             if get_archive_secret(secret, archived_file) != secret:
                 print secret
                 make_secret(secret)
-        
+                if archived_file != {}:
+                   dcs_to_deploy = dcs_to_deploy | search_deployment_configs(project, secret)
+                   print dcs_to_deploy
+
+
+        do_deploys(dcs_to_deploy)
         archive_file(secret_file)
 
 
